@@ -17,14 +17,14 @@ C:\Users\wsmith\Desktop\Development\SCPMaintenance\SCPMaintenance\bin\Debug\SCPM
 C:\Users\wsmith\Desktop\Development\SCPMaintenance\SCPMaintenance\bin\Debug\SCPMaintenance.exe
 C:\Users\wsmith\Desktop\Development\SCPMaintenance\SCPMaintenance\bin\Debug\SCPMaintenance.pdb
 C:\Users\wsmith\Desktop\Development\SCPMaintenance\SCPMaintenance\obj\Debug\SCPMaintenance.csprojAssemblyReference.cache
-C:\Users\wsmith\Desktop\Development\SCPMaintenance\SCPMaintenance\obj\Debug\MainWindow.g.cs
 C:\Users\wsmith\Desktop\Development\SCPMaintenance\SCPMaintenance\obj\Debug\App.g.cs
 C:\Users\wsmith\Desktop\Development\SCPMaintenance\SCPMaintenance\obj\Debug\SCPMaintenance_MarkupCompile.cache
 C:\Users\wsmith\Desktop\Development\SCPMaintenance\SCPMaintenance\obj\Debug\SCPMaintenance_MarkupCompile.lref
-C:\Users\wsmith\Desktop\Development\SCPMaintenance\SCPMaintenance\obj\Debug\MainWindow.baml
 C:\Users\wsmith\Desktop\Development\SCPMaintenance\SCPMaintenance\obj\Debug\SCPMaintenance.g.resources
 C:\Users\wsmith\Desktop\Development\SCPMaintenance\SCPMaintenance\obj\Debug\SCPMaintenance.Properties.Resources.resources
 C:\Users\wsmith\Desktop\Development\SCPMaintenance\SCPMaintenance\obj\Debug\SCPMaintenance.csproj.GenerateResource.cache
 C:\Users\wsmith\Desktop\Development\SCPMaintenance\SCPMaintenance\obj\Debug\SCPMaintenance.csproj.CoreCompileInputs.cache
 C:\Users\wsmith\Desktop\Development\SCPMaintenance\SCPMaintenance\obj\Debug\SCPMaintenance.exe
 C:\Users\wsmith\Desktop\Development\SCPMaintenance\SCPMaintenance\obj\Debug\SCPMaintenance.pdb
+C:\Users\wsmith\Desktop\Development\SCPMaintenance\SCPMaintenance\obj\Debug\SCPServiceMonitor.g.cs
+C:\Users\wsmith\Desktop\Development\SCPMaintenance\SCPMaintenance\obj\Debug\SCPServiceMonitor.baml

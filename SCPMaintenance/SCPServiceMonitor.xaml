@@ -1,11 +1,11 @@
-﻿<Window x:Class="SCPMaintenance.MainWindow"
+﻿<Window x:Class="SCPMaintenance.SCPServiceMonitor"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SCPMaintenance"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="907.533">
+        Title="SCP Service Monitor" Height="450" Width="907.533">
     <Grid Margin="0,0,2,0">
         <ListBox x:Name="listBoxServices" HorizontalAlignment="Left" Height="361" Margin="10,36,0,0" VerticalAlignment="Top" Width="241" SelectionMode="Multiple"/>
         <Label Content="Services" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.47,-1.661"/>
@@ -18,6 +18,7 @@
         <TextBox x:Name="txtBoxMonitor" HorizontalAlignment="Left" Height="358" Margin="691,36,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="193" IsReadOnly="True"/>
         <Label Content="Status" HorizontalAlignment="Left" Margin="691,10,0,0" VerticalAlignment="Top" Height="26"/>
         <Button x:Name="btnStopMonitor" Content="Stop Monitor" HorizontalAlignment="Left" Margin="527,245,0,0" VerticalAlignment="Top" Width="97" Height="25" Click="BtnStopMonitor_Click"/>
+        <Label x:Name="lblPending" Content="" HorizontalAlignment="Left" Margin="527,282,0,0" VerticalAlignment="Top" Width="97"/>
 
     </Grid>
 </Window>
