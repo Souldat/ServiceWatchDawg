@@ -5,20 +5,25 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SCPMaintenance"
         mc:Ignorable="d"
-        Title="SCP Service Monitor" Height="450" Width="907.533">
+        Title="SCP Service Monitor" Height="451.557" Width="616.356">
     <Grid Margin="0,0,2,0">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="245*"/>
+            <ColumnDefinition Width="58*"/>
+        </Grid.ColumnDefinitions>
         <ListBox x:Name="listBoxServices" HorizontalAlignment="Left" Height="361" Margin="10,36,0,0" VerticalAlignment="Top" Width="241" SelectionMode="Multiple"/>
-        <Label Content="Services" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.47,-1.661"/>
-        <Button x:Name="btnStartMonitor" Content="Start Monitor" HorizontalAlignment="Left" Margin="527,205,0,0" VerticalAlignment="Top" Width="97" Click="btnStartMonitor_Click" Height="25"/>
-        <ListBox x:Name="listBoxFiles" HorizontalAlignment="Left" Height="361" Margin="271,36,0,0" VerticalAlignment="Top" Width="199"/>
-        <Label Content="Files to Monitor" HorizontalAlignment="Left" Margin="271,10,0,0" VerticalAlignment="Top"/>
-        <Button x:Name="btnFileSelect" Content="Select Files" HorizontalAlignment="Left" Margin="527,158,0,0" VerticalAlignment="Top" Width="97" Click="btnFileSelect_Click" Height="26"/>
-        <TextBox x:Name="txtBoxSearchText" HorizontalAlignment="Left" Height="101" Margin="484,36,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="193"/>
-        <Label Content="Text To Search For" HorizontalAlignment="Left" Margin="484,10,0,0" VerticalAlignment="Top"/>
-        <TextBox x:Name="txtBoxMonitor" HorizontalAlignment="Left" Height="358" Margin="691,36,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="193" IsReadOnly="True"/>
-        <Label Content="Status" HorizontalAlignment="Left" Margin="691,10,0,0" VerticalAlignment="Top" Height="26"/>
-        <Button x:Name="btnStopMonitor" Content="Stop Monitor" HorizontalAlignment="Left" Margin="527,245,0,0" VerticalAlignment="Top" Width="97" Height="25" Click="BtnStopMonitor_Click"/>
-        <Label x:Name="lblPending" Content="" HorizontalAlignment="Left" Margin="527,282,0,0" VerticalAlignment="Top" Width="97"/>
+        <Label Content="Services" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.47,-1.661" Height="26" Width="52"/>
+        <Button x:Name="btnStartMonitor" Content="Start Monitor" HorizontalAlignment="Left" Margin="5,35,0,0" VerticalAlignment="Top" Width="97" Click="btnStartMonitor_Click" Height="25" Grid.Column="1"/>
+        <ListBox x:Name="listBoxFiles" HorizontalAlignment="Left" Height="101" Margin="271,36,0,0" VerticalAlignment="Top" Width="199"/>
+        <Label Content="Files to Monitor" HorizontalAlignment="Left" Margin="271,10,0,0" VerticalAlignment="Top" Height="26" Width="93"/>
+        <Button x:Name="btnFileSelect" Content="Select Files" HorizontalAlignment="Left" Margin="271,143,0,0" VerticalAlignment="Top" Click="btnFileSelect_Click" Width="64" Height="23"/>
+        <TextBox x:Name="txtBoxSearchText" HorizontalAlignment="Left" Height="101" Margin="271,192,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="193"/>
+        <Label Content="Text To Search For" HorizontalAlignment="Left" Margin="271,166,0,0" VerticalAlignment="Top" Height="26" Width="108"/>
+        <TextBox x:Name="txtBoxMonitor" HorizontalAlignment="Left" Height="62" Margin="271,330,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="193" IsReadOnly="True"/>
+        <Button x:Name="btnStopMonitor" Content="Stop Monitor" HorizontalAlignment="Left" Margin="5,75,0,0" VerticalAlignment="Top" Width="97" Height="25" Click="BtnStopMonitor_Click" Grid.Column="1"/>
+        <Label x:Name="lblPending" Content="" HorizontalContentAlignment="Center" HorizontalAlignment="Left" Margin="5,105,0,0" VerticalAlignment="Top" Width="97" Grid.Column="1" Height="26"/>
+        <Label Content="Status" HorizontalAlignment="Left" Margin="271,304,0,0" VerticalAlignment="Top" Height="26" Width="42"/>
+        <Button x:Name="btnClearFiles" Content="Clear" HorizontalAlignment="Left" Margin="353,143,0,0" VerticalAlignment="Top" Width="64" Height="23" Click="BtnClearFiles_Click"/>
 
     </Grid>
 </Window>

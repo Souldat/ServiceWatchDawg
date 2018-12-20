@@ -25,7 +25,7 @@ namespace SCPMaintenance
 
         DateTime timeOfAppStart = DateTime.Now;
         DateTime lastLogTextMatch;
-        int timeoutMilliseconds = 10000;
+        int timeoutMilliseconds = 20000;
         static bool run = true;
         bool firstRun = true;
         
@@ -49,21 +49,25 @@ namespace SCPMaintenance
 
         private void btnFileSelect_Click(object sender, RoutedEventArgs e)
         {
-            dialogResult = fileDialog.ShowDialog();
+            dialogResult = fileDialog.ShowDialog();            
 
             if (dialogResult == System.Windows.Forms.DialogResult.OK)
             {
                 foreach (String file in fileDialog.FileNames)
                 {
-                    listBoxFiles.Items.Add(file);
+                    if (file.Contains(".log") || file.Contains(".txt"))
+                    {
+                        listBoxFiles.Items.Add(file);
+                    }
                 }
             }
         }
 
         private void btnStartMonitor_Click(object sender, RoutedEventArgs e)
         {
+           
 
-            if(listBoxServices.SelectedIndex == -1)
+            if (listBoxServices.SelectedIndex == -1)
             {
                 MessageBox.Show("Select a service(s) to restart.", "No service selected.", MessageBoxButton.OK, MessageBoxImage.Asterisk);
                 return;
@@ -79,6 +83,10 @@ namespace SCPMaintenance
                 return;
             }
 
+            lblPending.Content = "Monitoring...";
+            firstRun = true;
+
+            serviceNames.Clear();
             foreach (string s in listBoxServices.SelectedItems)
             {
                 serviceNames.Add(s);
@@ -120,7 +128,26 @@ namespace SCPMaintenance
             List<object> obj = e.Argument as List<object>;
 
             MonitorFiles(obj[0] as List<string>, obj[1] as string);                         
-        }   
+        }  
+        
+        private void CheckServices(DateTime currentLogTextMatchTimeStamp)
+        {
+            if (currentLogTextMatchTimeStamp > timeOfAppStart)
+            {
+                lastLogTextMatch = currentLogTextMatchTimeStamp;
+
+                for (int k = 0; k < serviceNames.Count; k++)
+                {
+                    for (int m = 0; m < services.Count(); m++)
+                    {
+                        if (serviceNames[k].ToString() == services[m].ServiceName)
+                        {
+                            ManageService(services, m);
+                        }
+                    }
+                }
+            }
+        }
     
         private void MonitorFiles(List<string> serviceNames, string _searchText)
         {            
@@ -129,158 +156,161 @@ namespace SCPMaintenance
                 try
                 {
                     GetFileText(_searchText);
+                                      
+                    StringBuilder sb = new StringBuilder();
+                    DateTime currentLogTextMatchTimeStamp = new DateTime();
 
-                    for (int k = 0; k < serviceNames.Count; k++)
-                    {
-                        for (int m = 0; m < services.Count(); m++)
-                        {
-                            if (serviceNames[k].ToString() == services[m].ServiceName)
+                    try
+                    {     
+                            for (int p = 0; p < 23; p++)
                             {
-                                for (int i = 0; i < fileText.Count(); i++)
-                                {                                   
-                                    //TODO find last instance and make sure new finding is newer 
-                                    StringBuilder sb = new StringBuilder();
-                                    DateTime currentLogTextMatchTimeStamp = new DateTime();
-
-                                    for (int p = 0; p < 23; p++)
-                                    {
-                                        sb.Append(fileText[i][p]);
-                                    }
-
-                                    try
-                                    {                                           
-                                        string[] formats = new[] { "yyyy-MM-dd HH:mm:ss,fff" };
-                                        DateTime.TryParseExact(sb.ToString(), formats, CultureInfo.InvariantCulture,
-                                                            DateTimeStyles.None, out currentLogTextMatchTimeStamp);
-                                    }
-                                    catch(Exception e)
-                                    {
-                                        MessageBox.Show("There was an error determining timestamp in log file, please verify the files selected to monitor are log files.", "Log File Error", MessageBoxButton.OK, MessageBoxImage.Asterisk);
-                                    }
-
-                                    if (firstRun)
-                                    {
-                                        if (currentLogTextMatchTimeStamp > timeOfAppStart)
-                                        {
-                                            lastLogTextMatch = currentLogTextMatchTimeStamp;
-
-                                            ManageService(services, m);
-
-                                            firstRun = false;
-                                        }
-                                    }
-                                    else if(!firstRun)
-                                    {
-                                        if (currentLogTextMatchTimeStamp > lastLogTextMatch)
-                                        {
-                                            lastLogTextMatch = currentLogTextMatchTimeStamp;
-
-                                            ManageService(services, m);
-                                        }
-                                    } 
-                                }
+                                sb.Append(fileText[fileText.Count - 1][p]);
                             }
-                        }
-                    }
-                }catch (Exception e)
-                {
 
+                            string[] formats = new[] { "yyyy-MM-dd HH:mm:ss,fff" };
+                            DateTime.TryParseExact(sb.ToString(), formats, CultureInfo.InvariantCulture,
+                                                DateTimeStyles.None, out currentLogTextMatchTimeStamp);
+                                                        
+                    }
+                    catch(Exception e)
+                    {
+                        SetMonitorText("Unable to determine a timestamp: " + e.ToString());
+                    }
+
+                    if (firstRun)
+                    {
+                        CheckServices(currentLogTextMatchTimeStamp);                       
+                    }
+                    else if(!firstRun)
+                    {
+                        CheckServices(currentLogTextMatchTimeStamp);
+                    }                                     
+
+                    firstRun = false;
+                }
+                catch (Exception e)
+                {
+                    SetMonitorText("File Monitor Main Failure: " + e.ToString());
                 }
             }
         }
 
         private void ManageService(ServiceController[] services, int m)
         {
-            SetMonitorText("Text match found, restarting service: " + services[m].DisplayName);
-
-            Thread.Sleep(500);
-
-            int millisec1 = Environment.TickCount;
-            TimeSpan timeout = TimeSpan.FromMilliseconds(timeoutMilliseconds);
-
-            switch (services[m].Status)
+            try
             {
-                case ServiceControllerStatus.Running:
-                    SetMonitorText("Service already running, stopping service.");
-                    services[m].Stop();
-                    services[m].WaitForStatus(ServiceControllerStatus.Stopped, timeout);
-                    SetMonitorText("Starting service.");
-                    services[m].Start();
-                    services[m].WaitForStatus(ServiceControllerStatus.Running, timeout);
-                    SetMonitorText("Complete.");
-                    break;
-                case ServiceControllerStatus.Stopped:
-                    SetMonitorText("Service already stopped starting service.");
-                    services[m].Start();
-                    services[m].WaitForStatus(ServiceControllerStatus.Running, timeout);
-                    SetMonitorText("Complete.");
-                    break;
-                case ServiceControllerStatus.Paused:
-                    SetMonitorText("Service currently paused restarting service.");
-                    services[m].Stop();
-                    services[m].WaitForStatus(ServiceControllerStatus.Stopped, timeout);
-                    SetMonitorText("Starting service.");
-                    services[m].Start();
-                    services[m].WaitForStatus(ServiceControllerStatus.Running, timeout);
-                    SetMonitorText("Complete.");
-                    break;
-                case ServiceControllerStatus.StopPending:
-                    SetMonitorText("Service has stop pending, starting after stop.");
-                    services[m].WaitForStatus(ServiceControllerStatus.Stopped, timeout);
-                    services[m].Start();
-                    services[m].WaitForStatus(ServiceControllerStatus.Running, timeout);
-                    SetMonitorText("Complete.");
-                    break;
-                case ServiceControllerStatus.StartPending:
-                    SetMonitorText("Service currently pending start, restarting when complete.");
-                    services[m].WaitForStatus(ServiceControllerStatus.Running, timeout);
-                    services[m].Stop();
-                    services[m].WaitForStatus(ServiceControllerStatus.Stopped, timeout);
-                    SetMonitorText("Starting service.");
-                    services[m].Start();
-                    services[m].WaitForStatus(ServiceControllerStatus.Running, timeout);
-                    SetMonitorText("Complete.");
-                    break;
-                default:
-                    SetMonitorText("Unable to determine service state.");
-                    break;
+                SetMonitorText("Text match found, restarting service: " + services[m].DisplayName);                
+
+                int millisec1 = Environment.TickCount;
+                TimeSpan timeout = TimeSpan.FromMilliseconds(timeoutMilliseconds);
+
+                switch (services[m].Status)
+                {
+                    case ServiceControllerStatus.Running:
+                        SetMonitorText("Service already running, stopping service: " + services[m].DisplayName);
+                        services[m].Stop();
+                        services[m].WaitForStatus(ServiceControllerStatus.Stopped, timeout);
+                        SetMonitorText("Starting service: " + services[m].DisplayName);
+                        services[m].Start();
+                        services[m].WaitForStatus(ServiceControllerStatus.Running, timeout);
+                        SetMonitorText("Complete.");
+                        break;
+                    case ServiceControllerStatus.Stopped:
+                        SetMonitorText("Service already stopped starting service: " + services[m].DisplayName);
+                        services[m].Start();
+                        services[m].WaitForStatus(ServiceControllerStatus.Running, timeout);
+                        SetMonitorText("Complete.");
+                        break;
+                    case ServiceControllerStatus.Paused:
+                        SetMonitorText("Service currently paused stopping service: " + services[m].DisplayName);
+                        services[m].Stop();
+                        services[m].WaitForStatus(ServiceControllerStatus.Stopped, timeout);
+                        SetMonitorText("Starting service: " + services[m].DisplayName);
+                        services[m].Start();
+                        services[m].WaitForStatus(ServiceControllerStatus.Running, timeout);
+                        SetMonitorText("Complete.");
+                        break;
+                    case ServiceControllerStatus.StopPending:
+                        SetMonitorText("Service has stop pending, starting after stop: " + services[m].DisplayName);
+                        services[m].WaitForStatus(ServiceControllerStatus.Stopped, timeout);
+                        SetMonitorText("Starting service: " + services[m].DisplayName);
+                        services[m].Start();
+                        services[m].WaitForStatus(ServiceControllerStatus.Running, timeout);
+                        SetMonitorText("Complete.");
+                        break;
+                    case ServiceControllerStatus.StartPending:
+                        SetMonitorText("Service currently pending start, restarting when complete: " + services[m].DisplayName);
+                        services[m].WaitForStatus(ServiceControllerStatus.Running, timeout);
+                        SetMonitorText("Stopping service: " + services[m].DisplayName);
+                        services[m].Stop();
+                        services[m].WaitForStatus(ServiceControllerStatus.Stopped, timeout);
+                        SetMonitorText("Starting service: " + services[m].DisplayName);
+                        services[m].Start();
+                        services[m].WaitForStatus(ServiceControllerStatus.Running, timeout);
+                        SetMonitorText("Complete.");
+                        break;
+                    default:
+                        SetMonitorText("Unable to determine service state: " + services[m].DisplayName);
+                        break;
+                }
+            }
+            catch(Exception e)
+            {
+                SetMonitorText("Error in service management: " + services[m].DisplayName + e.ToString());
             }
         }
 
         private void GetFileText(string textToFind)
         {
-            string line;
+            try
+            {
+                string line;
 
-            fileText.Clear();        
+                fileText.Clear();
 
-            foreach (var file in fileDialog.FileNames)
-            {              
-                using (FileStream fs = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                foreach (var file in fileDialog.FileNames)
                 {
-                    using (StreamReader sr = new StreamReader(fs))
+                    using (FileStream fs = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                     {
-                        while ((line = sr.ReadLine()) != null)
+                        using (StreamReader sr = new StreamReader(fs))
                         {
-                            if(line.Contains(textToFind))
-                            fileText.Add(line);
+                            while ((line = sr.ReadLine()) != null)
+                            {
+                                if (line.Contains(textToFind) && line.Length > 23) fileText.Add(line);
+                                else
+                                {
+                                    SetMonitorText("Found matching text but no valid timestamp.");
+                                }
+                            }
                         }
                     }
                 }
-            }            
+            }
+            catch(Exception e)
+            {
+                SetMonitorText("Failure reading file: " + e.ToString());
+            }
         }
 
         private void BtnStopMonitor_Click(object sender, RoutedEventArgs e)
         {
-            run = false;
+            run = false;            
             bgw.CancelAsync();
-            lblPending.Content ="Stop Pending...";
-        }
-         
+            if (bgw.IsBusy)
+            {
+                lblPending.Content = "Stop Pending...";
+            }              
+        }         
 
         private void bgw_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             lblPending.Content = "";
             btnStartMonitor.IsEnabled = true;
+        }
+
+        private void BtnClearFiles_Click(object sender, RoutedEventArgs e)
+        {
+            listBoxFiles.Items.Clear();
         }
     }            
 }       
