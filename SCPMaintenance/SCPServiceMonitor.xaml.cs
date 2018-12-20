@@ -19,6 +19,7 @@ namespace SCPMaintenance
         List<String> fileText = new List<String>();
         List<String> serviceNames = new List<string>();
         private delegate void TextChanger(string s);
+        int retryCount = 0;
 
         BackgroundWorker bgw = new BackgroundWorker();
         private delegate void ListBoxGetter(System.Windows.Controls.ListBox _lb);
@@ -173,17 +174,45 @@ namespace SCPMaintenance
                                                         
                     }
                     catch(Exception e)
-                    {
-                        SetMonitorText("Unable to determine a timestamp: " + e.ToString());
+                    {                           
+                            
                     }
 
                     if (firstRun)
                     {
-                        CheckServices(currentLogTextMatchTimeStamp);                       
+                        if (currentLogTextMatchTimeStamp > timeOfAppStart)
+                        {
+                            lastLogTextMatch = currentLogTextMatchTimeStamp;
+
+                            for (int k = 0; k < serviceNames.Count; k++)
+                            {
+                                for (int m = 0; m < services.Count(); m++)
+                                {
+                                    if (serviceNames[k].ToString() == services[m].ServiceName)
+                                    {
+                                        ManageService(services, m);
+                                    }
+                                }
+                            }
+                        }
                     }
                     else if(!firstRun)
                     {
-                        CheckServices(currentLogTextMatchTimeStamp);
+                        if (currentLogTextMatchTimeStamp > lastLogTextMatch)
+                        {
+                            lastLogTextMatch = currentLogTextMatchTimeStamp;
+
+                            for (int k = 0; k < serviceNames.Count; k++)
+                            {
+                                for (int m = 0; m < services.Count(); m++)
+                                {
+                                    if (serviceNames[k].ToString() == services[m].ServiceName)
+                                    {
+                                        ManageService(services, m);
+                                    }
+                                }
+                            }
+                        }
                     }                                     
 
                     firstRun = false;
@@ -199,7 +228,9 @@ namespace SCPMaintenance
         {
             try
             {
-                SetMonitorText("Text match found, restarting service: " + services[m].DisplayName);                
+                SetMonitorText("Text match found, restarting service: " + services[m].DisplayName);
+
+                Thread.Sleep(500);
 
                 int millisec1 = Environment.TickCount;
                 TimeSpan timeout = TimeSpan.FromMilliseconds(timeoutMilliseconds);
@@ -253,10 +284,26 @@ namespace SCPMaintenance
                         SetMonitorText("Unable to determine service state: " + services[m].DisplayName);
                         break;
                 }
+
+                Thread.Sleep(1000);
+                SetMonitorText("");
             }
             catch(Exception e)
             {
-                SetMonitorText("Error in service management: " + services[m].DisplayName + e.ToString());
+                SetMonitorText("Error in service management trying again in 3 seconds.");
+                Thread.Sleep(3000);              
+
+                if(retryCount < 3)
+                {
+                    ManageService(services, m);
+                    retryCount++;
+                }
+                else
+                {
+                    SetMonitorText(e.ToString());
+                    retryCount = 0;
+                }
+               
             }
         }
 
@@ -276,11 +323,7 @@ namespace SCPMaintenance
                         {
                             while ((line = sr.ReadLine()) != null)
                             {
-                                if (line.Contains(textToFind) && line.Length > 23) fileText.Add(line);
-                                else
-                                {
-                                    SetMonitorText("Found matching text but no valid timestamp.");
-                                }
+                                if (line.Contains(textToFind) && line.Length > 23) fileText.Add(line);                                
                             }
                         }
                     }
