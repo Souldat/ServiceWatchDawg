@@ -2,31 +2,17 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.ServiceProcess;
-
 using System.IO;
 using System.Threading;
 using System.ComponentModel;
 using System.Globalization;
 
 namespace SCPMaintenance
-{
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
+{ 
     public partial class SCPServiceMonitor : Window
     {
-
         System.Windows.Forms.OpenFileDialog fileDialog = new System.Windows.Forms.OpenFileDialog();
         System.Windows.Forms.DialogResult dialogResult = new System.Windows.Forms.DialogResult();
         ServiceController[] services = ServiceController.GetServices();
@@ -133,8 +119,7 @@ namespace SCPMaintenance
 
             List<object> obj = e.Argument as List<object>;
 
-            MonitorFiles(obj[0] as List<string>, obj[1] as string);
-                         
+            MonitorFiles(obj[0] as List<string>, obj[1] as string);                         
         }   
     
         private void MonitorFiles(List<string> serviceNames, string _searchText)
@@ -152,54 +137,47 @@ namespace SCPMaintenance
                             if (serviceNames[k].ToString() == services[m].ServiceName)
                             {
                                 for (int i = 0; i < fileText.Count(); i++)
-                                {
-                                    if (fileText[i].Contains(_searchText))
+                                {                                   
+                                    //TODO find last instance and make sure new finding is newer 
+                                    StringBuilder sb = new StringBuilder();
+                                    DateTime currentLogTextMatchTimeStamp = new DateTime();
+
+                                    for (int p = 0; p < 23; p++)
                                     {
-                                        //TODO find last instance and make sure new finding is newer 
-                                        StringBuilder sb = new StringBuilder();
-                                        DateTime currentLogTextMatchTimeStamp = new DateTime();
-
-                                        for (int p = 0; p < 23; p++)
-                                        {
-                                            sb.Append(fileText[i][p]);
-                                        }
-
-                                        try
-                                        {                                           
-                                            string[] formats = new[] { "yyyy-MM-dd HH:mm:ss,fff" };
-                                            DateTime.TryParseExact(sb.ToString(), formats, CultureInfo.InvariantCulture,
-                                                                DateTimeStyles.None, out currentLogTextMatchTimeStamp);
-                                        }
-                                        catch(Exception e)
-                                        {
-                                            MessageBox.Show("There was an error determining timestamp in log file, please verify the files selected to monitor are log files.", "Log File Error", MessageBoxButton.OK, MessageBoxImage.Asterisk);
-                                        }
-
-                                        if (firstRun)
-                                        {
-                                            if (currentLogTextMatchTimeStamp > timeOfAppStart)
-                                            {
-                                                lastLogTextMatch = currentLogTextMatchTimeStamp;
-
-                                                ManageService(services, m);
-
-                                                firstRun = false;
-                                            }
-                                        }
-                                        else if(!firstRun)
-                                        {
-                                            if (currentLogTextMatchTimeStamp > lastLogTextMatch)
-                                            {
-                                                lastLogTextMatch = currentLogTextMatchTimeStamp;
-
-                                                ManageService(services, m);
-                                            }
-                                        }                                                               
+                                        sb.Append(fileText[i][p]);
                                     }
-                                    else
+
+                                    try
+                                    {                                           
+                                        string[] formats = new[] { "yyyy-MM-dd HH:mm:ss,fff" };
+                                        DateTime.TryParseExact(sb.ToString(), formats, CultureInfo.InvariantCulture,
+                                                            DateTimeStyles.None, out currentLogTextMatchTimeStamp);
+                                    }
+                                    catch(Exception e)
                                     {
-                                        //txtBoxMonitor.Text = "No matches found yet.";
+                                        MessageBox.Show("There was an error determining timestamp in log file, please verify the files selected to monitor are log files.", "Log File Error", MessageBoxButton.OK, MessageBoxImage.Asterisk);
                                     }
+
+                                    if (firstRun)
+                                    {
+                                        if (currentLogTextMatchTimeStamp > timeOfAppStart)
+                                        {
+                                            lastLogTextMatch = currentLogTextMatchTimeStamp;
+
+                                            ManageService(services, m);
+
+                                            firstRun = false;
+                                        }
+                                    }
+                                    else if(!firstRun)
+                                    {
+                                        if (currentLogTextMatchTimeStamp > lastLogTextMatch)
+                                        {
+                                            lastLogTextMatch = currentLogTextMatchTimeStamp;
+
+                                            ManageService(services, m);
+                                        }
+                                    } 
                                 }
                             }
                         }
@@ -271,9 +249,9 @@ namespace SCPMaintenance
 
         private void GetFileText(string textToFind)
         {
-            fileText.Clear();
-            //StreamReader sr = null;
             string line;
+
+            fileText.Clear();        
 
             foreach (var file in fileDialog.FileNames)
             {              
