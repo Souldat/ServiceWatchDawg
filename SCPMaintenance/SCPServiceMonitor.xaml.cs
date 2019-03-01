@@ -8,6 +8,7 @@ using System.IO;
 using System.Threading;
 using System.ComponentModel;
 using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace SCPMaintenance
 { 
@@ -135,56 +136,10 @@ namespace SCPMaintenance
             {
                 try
                 {
-                    GetFileText(_searchText);
-                                      
-                    StringBuilder sb = new StringBuilder();
-                    DateTime currentLogTextMatchTimeStamp = new DateTime();
-
-                    //Verify integrity of the timestamp text of the line found in the log file that contains the key text
-                    try
-                    {  
-                        foreach(string s in fileText)
-                        {
-                            sb.Clear();
-                          
-                            for (int p = 0; p < 23; p++)
-                            {
-                                sb.Append(s[p]);
-                            }
-                            
-                            string[] formats = new[] { "yyyy-MM-dd HH:mm:ss,fff" };
-                            DateTime dtcheck = new DateTime();
-                            DateTime.TryParseExact(sb.ToString(), formats, CultureInfo.InvariantCulture,
-                                                DateTimeStyles.None, out dtcheck);
-
-                            if (dtcheck > currentLogTextMatchTimeStamp)
-                            {
-                                currentLogTextMatchTimeStamp = dtcheck;
-                            }
-                        }                      
-                                                        
-                    }
-                    catch(Exception e)
-                    {                           
-                          //Do nothing if   
-                    }
-
-                    if (firstRun)
+                    if (GetFileText(_searchText))
                     {
-                        if (currentLogTextMatchTimeStamp > timeOfAppStart)
-                        {
-                            ScanServicesToManage(currentLogTextMatchTimeStamp);
-                        }
-                    }
-                    else if(!firstRun)
-                    {
-                        if (currentLogTextMatchTimeStamp > lastLogTextMatch)
-                        {
-                            ScanServicesToManage(currentLogTextMatchTimeStamp);
-                        }
-                    }                                     
-
-                    firstRun = false;
+                        ScanServicesToManage();
+                    }  
                 }
                 catch (Exception e)
                 {
@@ -193,9 +148,9 @@ namespace SCPMaintenance
             }
         }
 
-        public void ScanServicesToManage(DateTime currentLogTextMatchTimeStamp)
+        public void ScanServicesToManage()
         {
-            lastLogTextMatch = currentLogTextMatchTimeStamp;
+            //lastLogTextMatch = currentLogTextMatchTimeStamp;
 
             for (int k = 0; k < serviceNames.Count; k++)
             {
@@ -292,8 +247,17 @@ namespace SCPMaintenance
             }
         }
 
-        private void GetFileText(string textToFind)
+        private bool GetFileText(string textToFind)
         {
+            string re1 = "((?:2|1)\\d{3}(?:-|\\/)(?:(?:0[1-9])|(?:1[0-2]))(?:-|\\/)(?:(?:0[1-9])|(?:[1-2][0-9])|(?:3[0-1]))(?:T|\\s)(?:(?:[0-1][0-9])|(?:2[0-3])):(?:[0-5][0-9]):(?:[0-5][0-9]))";
+            Regex r = new Regex(re1, RegexOptions.IgnoreCase | RegexOptions.Singleline);
+            //DateTime lastLogTime = new DateTime();
+            StringBuilder sb = new StringBuilder();
+            DateTime dtcheck = new DateTime();
+            string[] logdate;
+
+            bool matchFound = false;
+
             try
             {
                 string line;  
@@ -307,8 +271,42 @@ namespace SCPMaintenance
                         using (StreamReader sr = new StreamReader(fs))
                         {
                             while ((line = sr.ReadLine()) != null)
-                            {                                                          
-                                if (line.Contains(textToFind) && line.Length > 23) fileText.Add(line); 
+                            {                               
+                                if (line.Contains(textToFind))
+                                {
+                                    Match m = r.Match(line);
+                                    
+                                    if (m.Success)
+                                    {
+                                        sb.Clear();
+
+                                        for (int i = 0; i < 23; i++)
+                                        {
+                                            sb.Append(line[i]);
+                                        }
+
+                                        //if this is the first instance found chuck the ol' dog into last found log datetime
+                                        if (lastLogTextMatch.ToString() == "1/1/0001 12:00:00 AM")
+                                        {
+                                            lastLogTextMatch = parseDateFromString(sb.ToString());
+                                            matchFound = true;
+                                            //fileText.Clear();
+                                            //fileText.Add(line);
+                                        }
+                                        else //else this isn't the first found instance so replace our array with this most recent instance and update last found log time
+                                        {
+                                            dtcheck = parseDateFromString(sb.ToString());
+
+                                            if (dtcheck > lastLogTextMatch)
+                                            {
+                                                lastLogTextMatch = dtcheck;
+                                                matchFound = true;
+                                                //fileText.Clear();
+                                                //fileText.Add(line);
+                                            }
+                                        }                                                                              
+                                    }                                    
+                                }
                             }
                         }
                     }
@@ -318,6 +316,18 @@ namespace SCPMaintenance
             {
                 SetMonitorText("Failure reading file: " + e.ToString());
             }
+
+            if (matchFound) return true; else return false;            
+        }
+
+        private DateTime parseDateFromString(string s)
+        {
+            DateTime date = new DateTime();
+
+            string[] formats = new[] { "yyyy-MM-dd HH:mm:ss,fff" };
+            DateTime.TryParseExact(s, formats, CultureInfo.InvariantCulture,
+                                DateTimeStyles.None, out date);
+            return date;
         }
 
         private void BtnStopMonitor_Click(object sender, RoutedEventArgs e)
