@@ -29,7 +29,7 @@ namespace SCPMaintenance
         int timeoutMilliseconds = 20000;
         static bool run = true;
         bool firstRun = true;
-        
+       
         public SCPServiceMonitor()
         {
             InitializeComponent();
@@ -66,21 +66,19 @@ namespace SCPMaintenance
 
         private void btnStartMonitor_Click(object sender, RoutedEventArgs e)
         {
-           
-
             if (listBoxServices.SelectedIndex == -1)
             {
-                MessageBox.Show("Select a service(s) to restart.", "No service selected.", MessageBoxButton.OK, MessageBoxImage.Asterisk);
+                MessageBox.Show("Select a service(s) to restart.", "No service selected", MessageBoxButton.OK, MessageBoxImage.Asterisk);
                 return;
             }
             else if (listBoxFiles.Items.Count == 0)
             {
-                MessageBox.Show("Select a file to monitor.", "No file(s) selected.", MessageBoxButton.OK, MessageBoxImage.Asterisk);
+                MessageBox.Show("Select a file to monitor.", "No file(s) selected", MessageBoxButton.OK, MessageBoxImage.Asterisk);
                 return;
             }
             else if(string.IsNullOrWhiteSpace(txtBoxSearchText.Text))
             {
-                MessageBox.Show("Enter search text.", "No text to search for enetered.", MessageBoxButton.OK, MessageBoxImage.Asterisk);
+                MessageBox.Show("Enter search text.", "No text to search for enetered", MessageBoxButton.OK, MessageBoxImage.Asterisk);
                 return;
             }
 
@@ -129,26 +127,7 @@ namespace SCPMaintenance
             List<object> obj = e.Argument as List<object>;
 
             MonitorFiles(obj[0] as List<string>, obj[1] as string);                         
-        }  
-        
-        private void CheckServices(DateTime currentLogTextMatchTimeStamp)
-        {
-            if (currentLogTextMatchTimeStamp > timeOfAppStart)
-            {
-                lastLogTextMatch = currentLogTextMatchTimeStamp;
-
-                for (int k = 0; k < serviceNames.Count; k++)
-                {
-                    for (int m = 0; m < services.Count(); m++)
-                    {
-                        if (serviceNames[k].ToString() == services[m].ServiceName)
-                        {
-                            ManageService(services, m);
-                        }
-                    }
-                }
-            }
-        }
+        }    
     
         private void MonitorFiles(List<string> serviceNames, string _searchText)
         {            
@@ -161,57 +140,47 @@ namespace SCPMaintenance
                     StringBuilder sb = new StringBuilder();
                     DateTime currentLogTextMatchTimeStamp = new DateTime();
 
+                    //Verify integrity of the timestamp text of the line found in the log file that contains the key text
                     try
-                    {     
+                    {  
+                        foreach(string s in fileText)
+                        {
+                            sb.Clear();
+                          
                             for (int p = 0; p < 23; p++)
                             {
-                                sb.Append(fileText[fileText.Count - 1][p]);
+                                sb.Append(s[p]);
                             }
-
+                            
                             string[] formats = new[] { "yyyy-MM-dd HH:mm:ss,fff" };
+                            DateTime dtcheck = new DateTime();
                             DateTime.TryParseExact(sb.ToString(), formats, CultureInfo.InvariantCulture,
-                                                DateTimeStyles.None, out currentLogTextMatchTimeStamp);
+                                                DateTimeStyles.None, out dtcheck);
+
+                            if (dtcheck > currentLogTextMatchTimeStamp)
+                            {
+                                currentLogTextMatchTimeStamp = dtcheck;
+                            }
+                        }                      
                                                         
                     }
                     catch(Exception e)
                     {                           
-                            
+                          //Do nothing if   
                     }
 
                     if (firstRun)
                     {
                         if (currentLogTextMatchTimeStamp > timeOfAppStart)
                         {
-                            lastLogTextMatch = currentLogTextMatchTimeStamp;
-
-                            for (int k = 0; k < serviceNames.Count; k++)
-                            {
-                                for (int m = 0; m < services.Count(); m++)
-                                {
-                                    if (serviceNames[k].ToString() == services[m].ServiceName)
-                                    {
-                                        ManageService(services, m);
-                                    }
-                                }
-                            }
+                            ScanServicesToManage(currentLogTextMatchTimeStamp);
                         }
                     }
                     else if(!firstRun)
                     {
                         if (currentLogTextMatchTimeStamp > lastLogTextMatch)
                         {
-                            lastLogTextMatch = currentLogTextMatchTimeStamp;
-
-                            for (int k = 0; k < serviceNames.Count; k++)
-                            {
-                                for (int m = 0; m < services.Count(); m++)
-                                {
-                                    if (serviceNames[k].ToString() == services[m].ServiceName)
-                                    {
-                                        ManageService(services, m);
-                                    }
-                                }
-                            }
+                            ScanServicesToManage(currentLogTextMatchTimeStamp);
                         }
                     }                                     
 
@@ -220,6 +189,22 @@ namespace SCPMaintenance
                 catch (Exception e)
                 {
                     SetMonitorText("File Monitor Main Failure: " + e.ToString());
+                }
+            }
+        }
+
+        public void ScanServicesToManage(DateTime currentLogTextMatchTimeStamp)
+        {
+            lastLogTextMatch = currentLogTextMatchTimeStamp;
+
+            for (int k = 0; k < serviceNames.Count; k++)
+            {
+                for (int m = 0; m < services.Count(); m++)
+                {
+                    if (serviceNames[k].ToString() == services[m].ServiceName)
+                    {
+                        ManageService(services, m);
+                    }
                 }
             }
         }
@@ -311,7 +296,7 @@ namespace SCPMaintenance
         {
             try
             {
-                string line;
+                string line;  
 
                 fileText.Clear();
 
@@ -322,8 +307,8 @@ namespace SCPMaintenance
                         using (StreamReader sr = new StreamReader(fs))
                         {
                             while ((line = sr.ReadLine()) != null)
-                            {
-                                if (line.Contains(textToFind) && line.Length > 23) fileText.Add(line);                                
+                            {                                                          
+                                if (line.Contains(textToFind) && line.Length > 23) fileText.Add(line); 
                             }
                         }
                     }
