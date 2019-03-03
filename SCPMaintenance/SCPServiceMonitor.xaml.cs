@@ -249,6 +249,7 @@ namespace SCPMaintenance
 
         private bool GetFileText(string textToFind)
         {
+            //TODO update regext to simplified version: \d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}:\d{3} use [0-6] to specify digit cannot be bigger than 6
             string re1 = "((?:2|1)\\d{3}(?:-|\\/)(?:(?:0[1-9])|(?:1[0-2]))(?:-|\\/)(?:(?:0[1-9])|(?:[1-2][0-9])|(?:3[0-1]))(?:T|\\s)(?:(?:[0-1][0-9])|(?:2[0-3])):(?:[0-5][0-9]):(?:[0-5][0-9]))";
             Regex r = new Regex(re1, RegexOptions.IgnoreCase | RegexOptions.Singleline);
             //DateTime lastLogTime = new DateTime();
